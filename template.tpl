@@ -475,7 +475,7 @@ paq(['setTrackerUrl', data.matomoBaseUrl + 'matomo.php']);
 paq(['setSiteId',data.matomoSiteId]);
 paq(["trackPageView"]);
 
-injectScript(trackerURL, data.gtmOnSuccess(), data.gtmOnFailure(), trackerURL);
+injectScript(trackerURL, data.gtmOnSuccess, data.gtmOnFailure, trackerURL);
 
 
 ___WEB_PERMISSIONS___
