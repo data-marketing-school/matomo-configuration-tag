@@ -1,6 +1,6 @@
 homepage: "https://www.data-marketing-school.com"
 versions:
-  - sha: df506f2a95771be69033d40eece4daf02b446e11
+  - sha: f8ff805de638221cf4f5595a1d0aea093d6200a2
     changeNotes: Add support for e-commerce and server tag
   - sha: 31dc5a6f86f90b39511fc9fe2cccb7f673c650f4
     changeNotes: Initial release.
