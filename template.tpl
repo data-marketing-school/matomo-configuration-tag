@@ -36,6 +36,7 @@ ___TEMPLATE_PARAMETERS___
   {
     "type": "SELECT",
     "name": "setupType",
+    "displayName": "Setup Type",
     "macrosInSelect": false,
     "selectItems": [
       {
@@ -48,8 +49,7 @@ ___TEMPLATE_PARAMETERS___
       }
     ],
     "simpleValueType": true,
-    "displayName": "Setup Type",
-    "defaultValue": "clientSide"
+    "help": "Client-Side: Documentation coming soon...\u003cbr\u003e Server-Side: Follow \u003ca href\u003d\"https://data-marketing-school.com/en/blog/google-tag-manager/matomo-server-side/\"\u003ethis guide\u003c/a\u003e."
   },
   {
     "type": "TEXT",
@@ -95,7 +95,14 @@ ___TEMPLATE_PARAMETERS___
     ],
     "valueHint": "1",
     "notSetText": "This field is required.",
-    "alwaysInSummary": true
+    "alwaysInSummary": true,
+    "enablingConditions": [
+      {
+        "paramName": "setupType",
+        "paramValue": "clientSide",
+        "type": "EQUALS"
+      }
+    ]
   },
   {
     "type": "GROUP",
@@ -429,7 +436,6 @@ ___TEMPLATE_PARAMETERS___
 
 ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
 
-// Enter your template code here.
 const log = require('logToConsole');
 const injectScript = require('injectScript');
 const createQueue = require('createQueue');
@@ -445,12 +451,6 @@ function parseMatomoUrl() {
   }
 }
 
-function parseServerContainerUrl() {
-  if (data.serverContainerUrl[data.serverContainerUrl.length - 1] !== '/') {
-    data.serverContainerUrl+='/';
-  }
-}
-
 var libraryUrl = "https://cdn.matomo.cloud/matomo.js";
 
 const paq = getPaq();
@@ -458,11 +458,8 @@ const paq = getPaq();
 if(data.setupType == "clientSide") {
   parseMatomoUrl();
   paq(['setTrackerUrl', data.matomoBaseUrl + 'matomo.php']);
-} else {
-  parseServerContainerUrl();
+  paq(['setSiteId', data.matomoSiteId]);
 }
-paq(['setSiteId', data.matomoSiteId]);
-
 
 function paqPushCustomDimensions(paq)
 {
