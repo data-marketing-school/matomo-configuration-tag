@@ -34,24 +34,6 @@ ___TEMPLATE_PARAMETERS___
 
 [
   {
-    "type": "SELECT",
-    "name": "setupType",
-    "displayName": "Setup Type",
-    "macrosInSelect": false,
-    "selectItems": [
-      {
-        "value": "clientSide",
-        "displayValue": "Client-Side"
-      },
-      {
-        "value": "serverSide",
-        "displayValue": "Server-Side"
-      }
-    ],
-    "simpleValueType": true,
-    "help": "Client-Side: Documentation coming soon...\u003cbr\u003e Server-Side: Follow \u003ca href\u003d\"https://data-marketing-school.com/en/blog/google-tag-manager/matomo-server-side/\"\u003ethis guide\u003c/a\u003e."
-  },
-  {
     "type": "TEXT",
     "name": "matomoBaseUrl",
     "displayName": "Matomo Instance URL",
@@ -70,14 +52,7 @@ ___TEMPLATE_PARAMETERS___
     ],
     "valueHint": "https://srv.matomo.cloud",
     "notSetText": "This field is required.",
-    "alwaysInSummary": true,
-    "enablingConditions": [
-      {
-        "paramName": "setupType",
-        "paramValue": "clientSide",
-        "type": "EQUALS"
-      }
-    ]
+    "alwaysInSummary": true
   },
   {
     "type": "TEXT",
@@ -95,14 +70,7 @@ ___TEMPLATE_PARAMETERS___
     ],
     "valueHint": "1",
     "notSetText": "This field is required.",
-    "alwaysInSummary": true,
-    "enablingConditions": [
-      {
-        "paramName": "setupType",
-        "paramValue": "clientSide",
-        "type": "EQUALS"
-      }
-    ]
+    "alwaysInSummary": true
   },
   {
     "type": "GROUP",
@@ -214,52 +182,34 @@ ___TEMPLATE_PARAMETERS___
     "groupStyle": "ZIPPY_CLOSED",
     "subParams": [
       {
-        "type": "RADIO",
+        "type": "CHECKBOX",
+        "name": "enableContentTracking",
+        "checkboxText": "Enable Content Tracking",
+        "simpleValueType": true
+      },
+      {
+        "type": "SELECT",
         "name": "contentSettings",
-        "displayName": "",
-        "radioItems": [
+        "macrosInSelect": false,
+        "selectItems": [
           {
             "value": "trackAllContentImpressions",
-            "displayValue": "Track all content impressions",
-            "help": "Will scan the entire DOM for content blocks and track a content impression immediately for each of them."
+            "displayValue": "Track all content impressions"
           },
           {
             "value": "trackVisibleContentImpressions",
-            "displayValue": "Track visible content impressions",
-            "subParams": [
-              {
-                "type": "TEXT",
-                "name": "timeInterval",
-                "displayName": "Time interval (Optional)",
-                "simpleValueType": true,
-                "valueUnit": "milliseconds",
-                "valueValidators": [
-                  {
-                    "type": "POSITIVE_NUMBER"
-                  }
-                ],
-                "help": "Rescan the entire DOM for new content impressions every X milliseconds. Default is 750 ms.",
-                "defaultValue": 750,
-                "canBeEmptyString": true
-              },
-              {
-                "type": "CHECKBOX",
-                "name": "disableCheckOnScroll",
-                "checkboxText": "Disable check on scroll (Optional)",
-                "simpleValueType": true,
-                "help": "Won\u0027t rescan the DOM after each scroll."
-              }
-            ],
-            "help": "Will only track content blocks in the viewport and not hidden (opacity, visibility, display)."
-          },
-          {
-            "value": "not_set",
-            "displayValue": "Not set",
-            "help": "Won\u0027t track any content blocks."
+            "displayValue": "Track visible content impressions"
           }
         ],
         "simpleValueType": true,
-        "defaultValue": "not_set"
+        "defaultValue": "trackAllContentImpressions",
+        "enablingConditions": [
+          {
+            "paramName": "enableContentTracking",
+            "paramValue": true,
+            "type": "EQUALS"
+          }
+        ]
       }
     ]
   },
@@ -436,7 +386,11 @@ ___TEMPLATE_PARAMETERS___
 
 ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
 
-const log = require('logToConsole');
+//[TO EDIT] IN SERVER-SIDE
+const libraryUrl = "https://cdn.matomo.cloud/matomo.js";
+const trackerPath = "matomo.php";
+// END EDITION
+
 const injectScript = require('injectScript');
 const createQueue = require('createQueue');
 const callLater = require('callLater');
@@ -451,15 +405,11 @@ function parseMatomoUrl() {
   }
 }
 
-var libraryUrl = "https://cdn.matomo.cloud/matomo.js";
-
 const paq = getPaq();
 
-if(data.setupType == "clientSide") {
-  parseMatomoUrl();
-  paq(['setTrackerUrl', data.matomoBaseUrl + 'matomo.php']);
-  paq(['setSiteId', data.matomoSiteId]);
-}
+parseMatomoUrl();
+paq(['setTrackerUrl', data.matomoBaseUrl + trackerPath]);
+paq(['setSiteId', data.matomoSiteId]);
 
 function paqPushCustomDimensions(paq)
 {
@@ -504,7 +454,6 @@ if(data.overridePageUrl) {
   paq(["setCustomUrl", data.newPageUrl]);
 }
 
-
 if(data.enableHeartbeatTimer && !data.heartbeatActiveTime) {
   paq(["enableHeartBeatTimer"]);
 } else if (data.enableHeartbeatTimer && data.heartbeatActiveTime) {
@@ -519,10 +468,12 @@ if(data.overridePageReferrer) {
   paq(["setReferrerUrl", data.newPageReferrer]);
 }
 
-if(data.contentSettings === "trackAllContentImpressions") {
-   paq([data.contentSettings]);
-} else if (data.contentSettings === "trackVisibleContentImpressions") {
-  paq([data.contentSettings, !data.disableCheckOnScroll, data.timeInterval]);
+if(data.enableContentTracking) {
+  if(data.contentSettings === "trackAllContentImpressions") {
+     paq([data.contentSettings]);
+  } else if (data.contentSettings === "trackVisibleContentImpressions") {
+    paq([data.contentSettings, !data.disableCheckOnScroll, data.timeInterval]);
+  }
 }
 
 if(data.delayPageView) {
@@ -533,37 +484,12 @@ if(data.delayPageView) {
   paq(["trackPageView"]);
 }
 
-if(data.setupType == "clientSide") {
-  injectScript(libraryUrl, data.gtmOnSuccess, data.gtmOnFailure);
-} else {
-  data.gtmOnSuccess();
-}
+injectScript(libraryUrl, data.gtmOnSuccess, data.gtmOnFailure);
 
 
 ___WEB_PERMISSIONS___
 
 [
-  {
-    "instance": {
-      "key": {
-        "publicId": "logging",
-        "versionId": "1"
-      },
-      "param": [
-        {
-          "key": "environments",
-          "value": {
-            "type": 1,
-            "string": "debug"
-          }
-        }
-      ]
-    },
-    "clientAnnotations": {
-      "isEditedByUser": true
-    },
-    "isRequired": true
-  },
   {
     "instance": {
       "key": {
