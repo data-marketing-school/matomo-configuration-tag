@@ -10,9 +10,8 @@ ___INFO___
 
 {
   "type": "TAG",
-  "id": "cvt_temp_public_id",
+  "id": "cvt_TNCP7",
   "version": 1,
-  "securityGroups": [],
   "displayName": "Matomo Analytics - Configuration",
   "categories": [
     "ANALYTICS",
@@ -26,7 +25,8 @@ ___INFO___
   "description": "Matomo Analytics configuration tag template.",
   "containerContexts": [
     "WEB"
-  ]
+  ],
+  "securityGroups": []
 }
 
 
@@ -373,6 +373,12 @@ ___TEMPLATE_PARAMETERS___
       },
       {
         "type": "CHECKBOX",
+        "name": "enableFormAnalytics",
+        "checkboxText": "Enable Form Analytics",
+        "simpleValueType": true
+      },
+      {
+        "type": "CHECKBOX",
         "name": "enableJSErrorTracking",
         "checkboxText": "Enable JavaScript Errors Tracking",
         "simpleValueType": true,
@@ -386,8 +392,10 @@ ___TEMPLATE_PARAMETERS___
 
 ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
 
+const matomoInstanceUrl = parseMatomoUrl();
+
 //[TO EDIT] IN SERVER-SIDE
-const libraryUrl = "https://cdn.matomo.cloud/matomo.js";
+const libraryUrl = matomoInstanceUrl + "matomo.js";
 const trackerPath = "matomo.php";
 // END EDITION
 
@@ -403,12 +411,13 @@ function parseMatomoUrl() {
   if (data.matomoBaseUrl[data.matomoBaseUrl.length - 1] !== '/') {
     data.matomoBaseUrl+='/';
   }
+  
+  return data.matomoBaseUrl;
 }
 
 const paq = getPaq();
 
-parseMatomoUrl();
-paq(['setTrackerUrl', data.matomoBaseUrl + trackerPath]);
+paq(['setTrackerUrl', matomoInstanceUrl + trackerPath]);
 paq(['setSiteId', data.matomoSiteId]);
 
 function paqPushCustomDimensions(paq)
@@ -440,6 +449,10 @@ paqPushCustomDimensions(paq);
 
 if(data.enableLinkTracking && !data.enableCrossDomainTracking) {
   paq(["enableLinkTracking"]);
+}
+
+if(data.enableFormTracking) {
+  paq.push(['FormAnalytics::scanForForms']);
 }
 
 if(data.userId) {
@@ -565,7 +578,7 @@ ___WEB_PERMISSIONS___
             "listItem": [
               {
                 "type": 1,
-                "string": "https://cdn.matomo.cloud/matomo.js"
+                "string": "https://*.matomo.cloud/matomo.js"
               }
             ]
           }
