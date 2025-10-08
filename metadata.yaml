@@ -1,6 +1,8 @@
 homepage: "https://www.data-marketing-school.com"
 documentation: "https://data-marketing-school.com/en/blog/google-tag-manager/matomo-analytics/"
 versions:
+  - sha: ff766b2f72f56aef647ca7a5aae06487a0885e87
+    changeNotes: Script loading based on instance URL
   - sha: c813f5b146fc2e66e51d0aa53d2b6f872aa01807
     changeNotes: Change server-side + content tracking ui
   - sha: 256a9bb5f325b3c6bd615ed94a9d370fc4c1f1ac
